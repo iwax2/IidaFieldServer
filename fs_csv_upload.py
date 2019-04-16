@@ -4,6 +4,7 @@ import datetime
 import sys
 import codecs
 import math
+import glob
 
 url_prefix = 'http://strawberry.iida.lab/syokkaen1/'
 
@@ -22,17 +23,23 @@ def calc_vpd( temp, humi ):
   vpd = (svp-vp)/1000    # Vapour Pressure Dificit [kPa]
   return(vpd)
 
+'''
 if( len(sys.argv) < 2 ):
   print("usage: "+sys.argv[0]+" <INPUT_CSV>")
   sys.exit()
+'''
 
 data = []
-with codecs.open( sys.argv[1], 'r', 'Shift-JIS' ) as f:
-  for line in f:
-    csv = line.strip().replace(" ", "").split(',')
-    if(csv[0].isnumeric()):
-      data.append(csv)
+file_list = sorted(glob.glob('./data/*.csv'))
+for filename in file_list:
+  print(filename)
+  with codecs.open( filename, 'r', 'Shift-JIS' ) as f:
+    for line in f:
+      csv = line.strip().replace(" ", "").split(',')
+      if(csv[0].isnumeric()):
+        data.append(csv)
 
+upload = []
 prev = datetime.datetime(1900,1,1)
 fiap = pyfiap.fiap.APP("http://iot.info.nara-k.ac.jp/axis2/services/FIAPStorage?wsdl")
 for c in data:
@@ -54,7 +61,13 @@ for c in data:
     soil =c[10] # 土壌水分センサの生データ
     vpd = round(calc_vpd(float(temp),float(humi)),2)
     if( float(temp)>0 and float(humi)>0 and float(co2)>0 and float(pre)>0 and float(soil)>0 ):
-      data.append()
+      upload.append([url_prefix+'temp', temp, now])
+      upload.append([url_prefix+'humi', humi, now])
+      upload.append([url_prefix+'vpd',  vpd,  now])
+      upload.append([url_prefix+'co2',  co2,  now])
+      upload.append([url_prefix+'pre',  pre,  now])
+      upload.append([url_prefix+'soil', soil, now])
+  prev = now
 '''
       fiap.write([[url_prefix+'temp', temp, now],
                   [url_prefix+'humi', humi, now],
@@ -64,7 +77,8 @@ for c in data:
                   [url_prefix+'soil', soil, now],
                   ])
 '''
-  prev = now
+#fiap.write(upload)
+print(upload)
 #today = datetime.datetime.now()
 #today = datetime.datetime(2019,4,12,16,0,4)
 
