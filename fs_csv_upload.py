@@ -6,7 +6,11 @@ import codecs
 import math
 import glob
 
-url_prefix = 'http://strawberry.iida.lab/syokkaen2/'
+#url_prefix = 'http://strawberry.iida.lab/syokkaen1/'
+#url_prefix = 'http://strawberry.iida.lab/syokkaen2/'
+#url_prefix = 'http://strawberry.iida.lab/iwainouen/'
+#url_prefix = 'http://strawberry.iida.lab/hagiwara/'
+url_prefix = 'http://strawberry.iida.lab/yamada/'
 
 def temp2svp( temp ):
   temp = temp+273.15
@@ -51,7 +55,11 @@ for filename in file_list:
     d = int(c[0][6:8])
     hh = int(c[1][0:2])
     mm = int(c[1][2:4])
-    now = datetime.datetime(y,m,d,hh,mm)
+    try:
+      now = datetime.datetime(y,m,d,hh,mm)
+    except ValueError:
+      print(c)
+      continue
     if(now>prev):
       bat = c[2] # バッテリー
       lat = c[3] # 緯度
@@ -71,8 +79,11 @@ for filename in file_list:
                     [url_prefix+'pre', pre, now],
                     [url_prefix+'soil', soil, now],
                     ])
+      else:
+        print("Error: "+temp,humi,pre,co2,soil)
     prev = now
-  print(filename+" is uploaded. "+str(no_file)+" / "+len(file_list))
+  no_file = no_file + 1
+  print(filename+" is uploaded. "+str(no_file)+" / "+str(len(file_list)))
 '''
         upload.append([url_prefix+'temp', temp, now])
         upload.append([url_prefix+'humi', humi, now])
